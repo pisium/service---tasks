@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum GroupRole{
+  admin
+  member
+
+  @@map("function_group") //Apelido para mapear ENUM no banco
+}
+
+model Group{
+  id String @id @default(uuid()) @db.Uuid
+  name String
+  createdBy String @db.Uuid
+  createdAt DateTime @default(now()) 
+
+  members GroupMember[]
+  projects Project[]
+
+  @@map("group") //Apelido para mapear a tabela group
+}
+
+model GroupMember{
+  id String @id @default(uuid()) @db.Uuid
+  groupId String @db.Uuid
+  userId String @db.Uuid
+  role GroupRole @default(member)
+  addedAt DateTime @default(now())
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@map("group_member")
+  @@index([groupId, userId], name:"idx_group_member") //Para buscas rápidas de membros de grupo
+}
+
+model Project{
+  id String @id @default(uuid()) @db.Uuid
+  groupId String @db.Uuid
+  name String 
+  description String? 
+  createdAt DateTime @default(now())
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  tasks Task[] 
+
+  @@map("project") //Apelido para mapear a tabela project
+}
+
+enum TaskStatus {
+  to_do
+  doing
+  done
+
+  @@map("task_status") //Apelido para mapear ENUM no banco
+}
+
+model Task{
+  id String @id @default(uuid()) @db.Uuid
+  projectId String @db.Uuid
+  title String
+  description String?
+  status TaskStatus @default(to_do)
+  responsibleId String? @db.Uuid
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("tasks") //Apelido para mapear a tabela task
+  @@index([status,projectId], name:"idx_search_for_project_status") //Melhor performance em filtros por status + projeto
+}
