@@ -22,7 +22,7 @@ export class Task {
     responsibleId?: string,
   ): Task {
     if (!title.trim()) {
-      throw new Error('Task title must not be empty.');
+      throw new Error('O título da tarefa não deve estar vazio.');
     }
 
     const now = new Date();
@@ -41,11 +41,11 @@ export class Task {
 
   updateStatus(newStatus: TaskStatus): void {
     if (!Object.values(TaskStatus).includes(newStatus)) {
-      throw new Error('Invalid TaskStatus.');
+      throw new Error('Status de tarefa inválido');
     }
 
     if (this.status === TaskStatus.ARCHIVED && newStatus !== TaskStatus.ARCHIVED) {
-      throw new Error('Cannot change status of an archived task.');
+      throw new Error('Não é possível alterar o status de uma tarefa arquivada.');
     }
 
     this.status = newStatus;
