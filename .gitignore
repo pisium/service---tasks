@@ -1,5 +1,5 @@
 # Logs
-node_modules
+
 logs
 *.log
 npm-debug.log*
@@ -92,7 +92,7 @@ out
 # Nuxt.js build / generate output
 .nuxt
 dist
-
+node_modules
 # Gatsby files
 .cache/
 # Comment in the public line in if your project uses Gatsby and not Next.js
