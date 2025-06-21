@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import axios from 'axios';
+import { config } from '@/config';
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -10,8 +11,6 @@ export interface AuthenticatedRequest extends Request {
   };
 }
 
-const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'http://localhost:3001';
-
 export async function authenticateAPI(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
 
@@ -21,7 +20,7 @@ export async function authenticateAPI(req: AuthenticatedRequest, res: Response, 
   }
 
   try {
-    const response = await axios.get(`${AUTH_SERVICE_URL}/validate-api`, {
+    const response = await axios.get(`${config.auth}/validate-api`, {
       headers: {
         Authorization: authHeader,
       },
