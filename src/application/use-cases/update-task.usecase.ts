@@ -1,6 +1,8 @@
 import { TaskRepository } from "@/application/repositories/task-repository";
 import { Task } from "@/domain/task.entity";
 import { TaskStatus } from "@/domain/task-status.enum";
+import { RabbitMQService } from "@/infrastructure/messaging/rabbitmq.service";
+import { config } from "@/config";
 
 interface UpdateTaskRequest {
   taskId: string;
@@ -14,7 +16,8 @@ interface UpdateTaskRequest {
 
 export class UpdateTaskUseCase {
   constructor(
-    private taskRepository: TaskRepository
+    private taskRepository: TaskRepository,
+    private notificationService: RabbitMQService
   ){}
 
   async execute(data: UpdateTaskRequest): Promise<Task> {
@@ -66,8 +69,24 @@ export class UpdateTaskUseCase {
 
     if (hasChanges){
       await this.taskRepository.update(task)
+        const notificationPayload = {
+          type: 'TASK_UPDATED',
+          recipientId: task.creatorId,
+          data:{
+            taskId: task.id,
+            title: task.title,
+            description: task.description,
+            dueDate: task.dueDate,
+            responsible: task.responsibleId
+          }
+        };
+    
+        await this.notificationService.publish(
+          config.rabbitMQ.notificationExchange,
+          config.rabbitMQ.taskUpdatedRoutingKey,
+          notificationPayload
+        );
     }
-
     return task;
   }
 }

@@ -43,6 +43,7 @@
   },
   "devDependencies": {
     "@prisma/client": "^6.9.0",
+    "@types/amqplib": "^0.10.7",
     "@types/bcryptjs": "^2.4.6",
     "@types/express": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.9",
