@@ -1,23 +1,27 @@
 import { TaskRepository } from "@/application/repositories/task-repository";
+import { Task } from "@/domain/task.entity";
+import { TaskStatus } from "@/domain/task-status.enum";
 
 interface UpdateTaskRequest {
   taskId: string;
   userId: string;
   title?: string;
   description?: string;
-  status?: string;
+  status?: TaskStatus;
   responsibleId?: string;
-  projectId?: string;
+  dueDate?: Date;
 }
 
 export class UpdateTaskUseCase {
-  constructor(private taskRepository: TaskRepository) {}
+  constructor(
+    private taskRepository: TaskRepository
+  ){}
 
-  async execute(data: UpdateTaskRequest) {
+  async execute(data: UpdateTaskRequest): Promise<Task> {
     const task = await this.taskRepository.findById(data.taskId);
 
     if (!task) {
-      throw new Error('Task not found');
+      throw new Error('Tarefa não encontrada.');
     }
 
     const isCreator = task.creatorId === data.userId;
@@ -27,18 +31,14 @@ export class UpdateTaskUseCase {
       throw new Error('Você não tem permissão para atualizar esta tarefa');
     }
 
-    const updateData: any = {};
+    const {taskId, userId, ...dataToUpdate } = data;
 
-    if (data.title !== undefined) updateData.title = data.title;
-    if (data.description !== undefined) updateData.description = data.description;
-    if (data.status !== undefined) updateData.status = data.status;
-    if (data.responsibleId !== undefined) updateData.responsibleId = data.responsibleId;
-    if (data.projectId !== undefined) updateData.projectId = data.projectId;
+    if (Object.keys(dataToUpdate).length ===0){
+      return task;
+    }
 
-    updateData.updatedAt = new Date();
+    await this.taskRepository.update(task);
 
-    await this.taskRepository.update(data.taskId, updateData);
-
-    return { message: 'Atualização realizada com sucesso' };
+    return task;
   }
 }
