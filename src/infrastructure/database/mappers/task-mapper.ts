@@ -10,15 +10,42 @@ export class TaskMapper {
       prismaTask.title,
       prismaTask.creatorId,
       prismaTask.groupId,
-      prismaTask.status as unknown as TaskStatus,
+      TaskMapper.statusFromPrisma(prismaTask.status),
       prismaTask.createdAt,
       prismaTask.updatedAt,
+      prismaTask.dueDate,
       prismaTask.description,
-      prismaTask.responsibleId,
+      prismaTask.responsibleId
     );
   }
 
+  static toPersistence(task: Task){
+     return { 
+      id: task.id,
+      title: task.title,
+      description: task.description,
+      status: TaskMapper.statusFromPrisma(task.status),
+      creatorId: task.creatorId,
+      groupId: task.groupId,
+      responsibleId: task.responsibleId,
+      dueDate: task.dueDate,
+      createdAt: task.createdAt,
+      updatedAt: task.updatedAt,
+    };
+  }
+
   static statusToPrisma(status: TaskStatus): PrismaTaskStatus {
-    return status as unknown as PrismaTaskStatus;
+    return status as PrismaTaskStatus;
+  }
+
+  static statusFromPrisma(status: string): TaskStatus {
+    switch(status){
+      case 'TO_DO': return TaskStatus.TO_DO;
+      case 'IN_PROGRESS': return TaskStatus.IN_PROGRESS;
+      case 'DONE': return TaskStatus.DONE;
+      case 'ARCHIVED': return TaskStatus.ARCHIVED;
+      default: 
+        throw new Error(`Status Prisma desconhecido: ${status}`);
+    }
   }
 }

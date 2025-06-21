@@ -9,6 +9,7 @@ export class Task {
     public status: TaskStatus,
     public readonly createdAt: Date,
     public updatedAt: Date,
+    public dueDate?: Date,
     public description?: string,
     public responsibleId?: string,
   ) {}
@@ -20,6 +21,7 @@ export class Task {
     groupId: string,
     description?: string,
     responsibleId?: string,
+    dueDate?: Date,
   ): Task {
     if (!title.trim()) {
       throw new Error('O título da tarefa não deve estar vazio.');
@@ -34,6 +36,7 @@ export class Task {
       TaskStatus.TO_DO,
       now,
       now,
+      dueDate,
       description,
       responsibleId,
     );
@@ -49,6 +52,11 @@ export class Task {
     }
 
     this.status = newStatus;
+    this.updatedAt = new Date();
+  }
+
+  updateDueDate(newDueDate?: Date): void{
+    this.dueDate = newDueDate;
     this.updatedAt = new Date();
   }
 

@@ -15,6 +15,7 @@ export class CreateTaskUseCase {
       input.groupId,
       input.description,
       input.responsibleId,
+      input.dueDate,
     );
 
     await this.taskRepository.create(task);
@@ -29,6 +30,7 @@ export class CreateTaskUseCase {
       responsibleId: task.responsibleId,
       createdAt: task.createdAt,
       updatedAt: task.updatedAt,
+      dueDate: task.dueDate
     };
   }
 }

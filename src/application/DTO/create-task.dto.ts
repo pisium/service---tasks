@@ -4,4 +4,5 @@ export interface CreateTaskDTO {
   creatorId: string;
   groupId: string;
   responsibleId?: string;
+  dueDate?: Date;
 }

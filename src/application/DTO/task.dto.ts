@@ -8,4 +8,5 @@ export interface TaskDTO {
   responsibleId?: string;
   createdAt: Date;
   updatedAt: Date;
+  dueDate?: Date;
 }
