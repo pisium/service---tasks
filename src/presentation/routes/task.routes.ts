@@ -33,6 +33,6 @@ router.put('/:taskId', authenticateAPI, (req, res) => taskController.update(req,
 router.delete('/:taskId', authenticateAPI, (req, res) => taskController.delete(req, res));
 router.get('/group/:groupId', authenticateAPI, (req, res) => taskController.findByGroup(req, res));
 router.get('/user/:userId', authenticateAPI, (req, res) => taskController.findByUser(req, res));
-router.get('/calendar', authenticateAPI, taskController.findTasksByDueDate)
+router.get('/calendar', authenticateAPI, (req, res) => taskController.findTasksByDueDate(req, res));
 
 export { router as taskRoutes };

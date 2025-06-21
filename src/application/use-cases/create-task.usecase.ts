@@ -8,6 +8,12 @@ export class CreateTaskUseCase {
   constructor(private readonly taskRepository: TaskRepository) {}
 
   async execute(input: CreateTaskDTO): Promise<TaskDTO> {
+    let validDueDate: Date | null = null;
+    if (input.dueDate){
+      const parsedDate = new Date(input.dueDate);
+        validDueDate = parsedDate;
+    }
+
     const task = Task.create(
       uuidv4(),
       input.title,
@@ -15,7 +21,7 @@ export class CreateTaskUseCase {
       input.groupId,
       input.description,
       input.responsibleId,
-      input.dueDate,
+      validDueDate
     );
 
     await this.taskRepository.create(task);

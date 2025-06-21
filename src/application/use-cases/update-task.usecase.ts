@@ -9,7 +9,7 @@ interface UpdateTaskRequest {
   description?: string;
   status?: TaskStatus;
   responsibleId?: string;
-  dueDate?: Date;
+  dueDate?: Date | string | null;
 }
 
 export class UpdateTaskUseCase {
@@ -31,13 +31,42 @@ export class UpdateTaskUseCase {
       throw new Error('Você não tem permissão para atualizar esta tarefa');
     }
 
-    const {taskId, userId, ...dataToUpdate } = data;
+    let hasChanges = false;
 
-    if (Object.keys(dataToUpdate).length ===0){
-      return task;
+    if (data.title !== undefined){
+      task.updateTitle(data.title);
+      hasChanges = true;
+    }
+    if (data.description !== undefined){
+      task.updateDescription(data.description);
+      hasChanges = true;
+    }
+    if (data.status !== undefined){
+      task.updateStatus(data.status);
+      hasChanges = true;
+    }
+    if (data.responsibleId !== undefined){
+      task.assignResponsible(data.responsibleId);
+      hasChanges = true;
     }
 
-    await this.taskRepository.update(task);
+    if (data.dueDate !== undefined){
+      if (data.dueDate === null){
+        task.updateDueDate(undefined)
+      } else {
+        const dateString = `${data.dueDate}T12:00:00`
+        const newDueDate = new Date(dateString);
+        if (!isNaN(newDueDate.getTime())){
+          
+          task.updateDueDate(newDueDate);
+        }
+      }
+      hasChanges = true;
+    }
+
+    if (hasChanges){
+      await this.taskRepository.update(task)
+    }
 
     return task;
   }
