@@ -3,7 +3,7 @@ import { TaskStatus } from '@/domain/task-status.enum';
 export class Task {
   constructor(
     public readonly id: string,
-    public readonly title: string,
+    public title: string,
     public readonly creatorId: string,
     public readonly groupId: string,
     public status: TaskStatus,
@@ -40,6 +40,19 @@ export class Task {
       description,
       responsibleId,
     );
+  }
+
+  updateTitle(newTitle: string): void{
+    if (!newTitle.trim()){
+      throw new Error('O título da tarefa não deve estar vazio.');
+    }
+    this.title = newTitle;
+    this.updatedAt = new Date();
+  }
+
+  updateDescription(newDescription?: string): void{
+    this.description = newDescription;
+    this.updatedAt = new Date ();
   }
 
   updateStatus(newStatus: TaskStatus): void {
