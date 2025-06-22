@@ -47,10 +47,10 @@ async function start() {
     res.status(200).send('🟢 Server is running');
   });
 
-  app.use('/tasks', taskRoutes);
+  app.use('/api/tasks', taskRoutes);
 
   const port = config.server.port;
-  app.listen(port, () => console.log(`Server online na porta ${port} ✅`));
+  app.listen(3002, () => console.log(`Server online na porta ${port} ✅`));
 }
 
 start().catch((error) => {
