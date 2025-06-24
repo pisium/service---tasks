@@ -9,7 +9,7 @@ import { config } from '@/config';
 export class CreateTaskUseCase {
   constructor(
     private readonly taskRepository: TaskRepository,
-    private readonly notificationService: RabbitMQService
+    private notificationService : RabbitMQService
   ) {}
 
   async execute(input: CreateTaskDTO): Promise<TaskDTO> {

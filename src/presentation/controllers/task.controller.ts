@@ -18,9 +18,10 @@ export class TaskController {
   ) {}
 
   async create(req: AuthenticatedRequest, res: Response): Promise<void> {
-    try {
-      const { title, description, responsibleId, groupId, dueDate } = req.body;
-      const creatorId = req.user!.id; 
+    console.log('create')
+
+      const { title, description, creatorId, responsibleId, groupId, dueDate } = req.body;
+      console.log("chamouuuu",this.createTaskUseCase)
       const task = await this.createTaskUseCase.execute({
         title,
         description,
@@ -32,13 +33,7 @@ export class TaskController {
 
       res.status(201).json(task);
 
-    } catch (error) {
-      if (error instanceof Error) {
-        res.status(400).json({ message: error.message });
-      } else {
-        res.status(500).json({ message: "Ocorreu um erro inesperado." });
-      }
-    }
+
   }
 
   async update(req: AuthenticatedRequest, res: Response): Promise<void> {
