@@ -18,9 +18,11 @@ export class TaskController {
   ) {}
 
   async create(req: AuthenticatedRequest, res: Response): Promise<void> {
+    // AJUSTE: Adicionado bloco try...catch para consistência e segurança.
     try {
       const { title, description, responsibleId, groupId, dueDate, memberIds } = req.body;
       const creatorId = req.user!.id; 
+      
       const task = await this.createTaskUseCase.execute({
         title,
         description,
@@ -33,19 +35,39 @@ export class TaskController {
 
       res.status(201).json(task);
 
-
+    } catch (error) {
+      if (error instanceof Error) {
+        res.status(400).json({ message: error.message });
+      } else {
+        res.status(500).json({ message: "Ocorreu um erro inesperado ao criar a tarefa." });
+      }
+    }
   }
 
   async update(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { taskId } = req.params;
-      const dataToUpdate = req.body;
       const userId = req.user!.id;
+      const { 
+        title, 
+        description, 
+        status, 
+        responsibleId, 
+        dueDate, 
+        addMemberIds, 
+        removeMemberIds 
+      } = req.body;
 
       const response = await this.updateTaskUseCase.execute({
         taskId,
         userId,
-        ...dataToUpdate,
+        title,
+        description,
+        status,
+        responsibleId,
+        dueDate,
+        addMemberIds,
+        removeMemberIds,
       });
 
       res.status(200).json(response);
@@ -62,11 +84,8 @@ export class TaskController {
     try {
       const { taskId } = req.params;
       const userId = req.user!.id;
-
       await this.deleteTaskUseCase.execute({ taskId, userId });
-
       res.status(204).send(); 
-
     } catch (error) {
       if (error instanceof Error) {
         res.status(400).json({ message: error.message });
@@ -107,17 +126,12 @@ export class TaskController {
   async findTasksByDueDate(req: Request, res: Response): Promise<void> {
     try {
       const { date } = req.query;
-
       if (!date || typeof date !== 'string') {
-        res.status(400).json({
-          message: 'O parâmetro de query "date" é obrigatório e deve ser uma string no formato YYYY-MM-DD.'
-        });
+        res.status(400).json({ message: 'O parâmetro de query "date" é obrigatório e deve ser uma string no formato YYYY-MM-DD.' });
         return;
       }
-
       const tasks = await this.findTaskByDueDateUseCase.execute(date);
       res.status(200).json(tasks);
-
     } catch (error) {
       if (error instanceof Error) {
         console.error('Erro ao buscar tarefas por data:', error.message);
