@@ -1,10 +1,17 @@
-import { Task as PrismaTask } from '@prisma/client';
+import { Task as PrismaTask, TaskMember, TaskStatus as PrismaTaskStatus } from '@prisma/client';
 import { Task } from '@/domain/task.entity';
 import { TaskStatus } from '@/domain/task-status.enum';
-import { TaskStatus as PrismaTaskStatus } from '@prisma/client';
+
+type PrismaTaskWithMembers = PrismaTask & {
+  members: TaskMember[];
+};
 
 export class TaskMapper {
-  static toDomain(prismaTask: PrismaTask): Task {
+  static toDomain(prismaTask: PrismaTaskWithMembers): Task {
+    const memberIds = prismaTask.members.map(
+      member => member.memberId
+    );
+
     return new Task(
       prismaTask.id,
       prismaTask.title,
@@ -15,23 +22,9 @@ export class TaskMapper {
       prismaTask.updatedAt,
       prismaTask.dueDate,
       prismaTask.description,
-      prismaTask.responsibleId
+      prismaTask.responsibleId,
+      memberIds
     );
-  }
-
-  static toPersistence(task: Task){
-     return { 
-      id: task.id,
-      title: task.title,
-      description: task.description,
-      status: TaskMapper.statusFromPrisma(task.status),
-      creatorId: task.creatorId,
-      groupId: task.groupId,
-      responsibleId: task.responsibleId,
-      dueDate: task.dueDate,
-      createdAt: task.createdAt,
-      updatedAt: task.updatedAt,
-    };
   }
 
   static statusToPrisma(status: TaskStatus): PrismaTaskStatus {

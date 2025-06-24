@@ -1,8 +1,9 @@
-import { TaskRepository } from "@/application/repositories/task-repository";
-import { Task } from "@/domain/task.entity";
-import { TaskStatus } from "@/domain/task-status.enum";
-import { RabbitMQService } from "@/infrastructure/messaging/rabbitmq.service";
-import { config } from "@/config";
+import { TaskRepository } from '@/application/repositories/task-repository';
+import { TaskStatus } from '@/domain/task-status.enum';
+import { RabbitMQService } from '@/infrastructure/messaging/rabbitmq.service';
+import { config } from '@/config';
+import { TaskEnrichmentService } from '@/application/services/task-enrichment.service';
+import { TaskDTO } from '@/application/DTO/task.dto';
 
 interface UpdateTaskRequest {
   taskId: string;
@@ -12,15 +13,18 @@ interface UpdateTaskRequest {
   status?: TaskStatus;
   responsibleId?: string;
   dueDate?: Date | string | null;
+  addMemberIds?: string[];
+  removeMemberIds?: string[];
 }
 
 export class UpdateTaskUseCase {
   constructor(
     private taskRepository: TaskRepository,
+    private taskEnrichmentService: TaskEnrichmentService,
     private notificationService: RabbitMQService
   ){}
 
-  async execute(data: UpdateTaskRequest): Promise<Task> {
+  async execute(data: UpdateTaskRequest): Promise<TaskDTO> {
     const task = await this.taskRepository.findById(data.taskId);
 
     if (!task) {
@@ -52,6 +56,14 @@ export class UpdateTaskUseCase {
       task.assignResponsible(data.responsibleId);
       hasChanges = true;
     }
+    if (data.addMemberIds && data.addMemberIds.length > 0){
+      data.addMemberIds.forEach(id => task.addMember(id));
+      hasChanges = true;
+    }
+    if (data.removeMemberIds && data.removeMemberIds.length >0){
+      data.removeMemberIds.forEach(id => task.removeMember(id));
+      hasChanges = true;
+    }
 
     if (data.dueDate !== undefined){
       if (data.dueDate === null){
@@ -68,7 +80,7 @@ export class UpdateTaskUseCase {
     }
 
     if (hasChanges){
-      await this.taskRepository.update(task)
+      await this.taskRepository.save(task)
         const notificationPayload = {
           type: 'TASK_UPDATED',
           recipientId: task.creatorId,
@@ -87,6 +99,13 @@ export class UpdateTaskUseCase {
           notificationPayload
         );
     }
-    return task;
+    const enrichedTasks = await this.taskEnrichmentService.enrichTasks([task]);
+
+    if (enrichedTasks.length === 0){
+      throw new Error(
+        "Tarefa criada, mas não foi possível obter os dados do usuário."
+      )
+    }
+    return enrichedTasks[0];
   }
 }

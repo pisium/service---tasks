@@ -7,6 +7,9 @@ export const config = {
   server: {
     port: process.env.PORT || 3002,
   },
+  baseUrl:{
+    url: process.env.USER_BASE_URL || 'http://service_user:3000'
+  },
   rabbitMQ: {
     uri: process.env.RABBITMQ_URI || 'amqp://guest:guest@localhost:5672',
     notificationExchange: process.env.NOTIFICATION_EXCHANGE_NAME || 'notification_events',

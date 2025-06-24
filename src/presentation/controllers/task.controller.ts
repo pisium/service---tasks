@@ -3,9 +3,9 @@ import { CreateTaskUseCase } from '@/application/use-cases/create-task.usecase';
 import { UpdateTaskUseCase } from '@/application/use-cases/update-task.usecase';
 import { DeleteTaskUseCase } from '@/application/use-cases/delete-task.usecase';
 import { FindTasksByGroupUseCase } from '@/application/use-cases/find-task-by-group.usecase';
-import { FindTasksByUserUseCase } from "@/application/use-cases/find-task-by-user.usecase";
+import { FindTasksByUserUseCase } from '@/application/use-cases/find-task-by-user.usecase';
 import { FindTasksByDueDateUseCase } from '@/application/use-cases/find-task-by-due-date.usecase';
-import { AuthenticatedRequest } from '../middlewares/auth.middleware';
+import { AuthenticatedRequest } from '@/presentation/middlewares/auth.middleware';
 
 export class TaskController {
   constructor(
@@ -18,10 +18,9 @@ export class TaskController {
   ) {}
 
   async create(req: AuthenticatedRequest, res: Response): Promise<void> {
-    console.log('create')
-
-      const { title, description, creatorId, responsibleId, groupId, dueDate } = req.body;
-      console.log("chamouuuu",this.createTaskUseCase)
+    try {
+      const { title, description, responsibleId, groupId, dueDate, memberIds } = req.body;
+      const creatorId = req.user!.id; 
       const task = await this.createTaskUseCase.execute({
         title,
         description,
@@ -29,6 +28,7 @@ export class TaskController {
         groupId,
         responsibleId,
         dueDate,
+        memberIds
       });
 
       res.status(201).json(task);
