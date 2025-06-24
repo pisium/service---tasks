@@ -11,6 +11,6 @@ export const createTaskRoutes = (taskController: TaskController): Router => {
   router.get('/group/:groupId', authenticateAPI, taskController.findByGroup.bind(taskController));
   router.get('/user/:userId', authenticateAPI, taskController.findByUser.bind(taskController));
   router.get('/calendar', authenticateAPI, taskController.findTasksByDueDate.bind(taskController));
-
+  
   return router;
 };
