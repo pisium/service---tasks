@@ -7,8 +7,16 @@ export class TaskDTOMapper {
     task: Task, 
     creator: User | undefined, 
     responsible: User | null | undefined,
-    members: UserInfoDTO[]
+    members: User[]
   ): TaskDTO {
+    const mapUserToDTO = (user: User | undefined): UserInfoDTO | null => {
+      if(!user) return null;
+      return{
+        id: user.id,
+        name: user.name,
+        email: user.email,
+      };
+    };
       return {
         id: task.id,
         title: task.title,
@@ -18,15 +26,9 @@ export class TaskDTOMapper {
         createdAt: task.createdAt,
         updatedAt: task.updatedAt,
         dueDate: task.dueDate,
-        creator: creator 
-          ? { id: creator.id, 
-            name: creator.name } 
-          : { id: task.creatorId, 
-            name: 'Usuário Desconhecido' },
-        responsible: responsible
-          ? { id: responsible.id, name: responsible.name }
-          : null,
-        members: members,
+        creator: mapUserToDTO(creator) || { id: task.creatorId, name: 'Usuário Desconhecido'},
+        responsible: mapUserToDTO(responsible),
+        members: members.map(mapUserToDTO).filter(Boolean) as UserInfoDTO[],
       };
   }
 }

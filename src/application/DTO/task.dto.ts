@@ -1,6 +1,7 @@
 export interface UserInfoDTO{
   id: string;
   name: string;
+  email?: string;
 }
 
 export interface TaskDTO {
