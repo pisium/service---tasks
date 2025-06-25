@@ -15,9 +15,12 @@ export class UserGateway implements UserRepository {
       );
       return response.data.map((
         userData: any
-      )=> User.create(userData.id, userData.name));
+      )=> User.create(userData.id, 
+                      userData.name, 
+                      userData.email
+                    ));
     } catch(error) {
-        console.error(`Erro ao buscar usuário ${id}:`, error);
+        console.error(`Erro ao buscar usuário ${id.join(',')}:`, error.message);
         return [];
     };
   }
