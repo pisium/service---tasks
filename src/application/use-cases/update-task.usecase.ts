@@ -1,9 +1,9 @@
 import { TaskRepository } from '@/application/repositories/task-repository';
 import { TaskStatus } from '@/domain/task-status.enum';
-import { RabbitMQService } from '@/infrastructure/messaging/rabbitmq.service';
 import { config } from '@/config';
 import { TaskEnrichmentService } from '@/application/services/task-enrichment.service';
 import { TaskDTO } from '@/application/DTO/task.dto';
+import { NotificationService } from '@/application/services/task-notification.service';
 
 interface UpdateTaskRequest {
   taskId: string;
@@ -21,7 +21,7 @@ export class UpdateTaskUseCase {
   constructor(
     private taskRepository: TaskRepository,
     private taskEnrichmentService: TaskEnrichmentService,
-    private notificationService: RabbitMQService
+    private notificationService: NotificationService
   ){}
 
   async execute(data: UpdateTaskRequest): Promise<TaskDTO> {
@@ -93,13 +93,19 @@ export class UpdateTaskUseCase {
           }
         };
     
-        await this.notificationService.publish(
-          config.rabbitMQ.notificationExchange,
-          config.rabbitMQ.taskUpdatedRoutingKey,
-          notificationPayload
-        );
     }
     const enrichedTasks = await this.taskEnrichmentService.enrichTasks([task]);
+
+    await this.notificationService.send({
+      to:enrichedTasks[0].responsible.email, 
+      type: 'TASK_UPDATED',
+      creator: enrichedTasks[0].creator.name,
+      data:{
+        task: enrichedTasks[0].title,
+        status: enrichedTasks[0].status,
+        responsible: enrichedTasks[0].responsible.name
+      }
+    });
 
     if (enrichedTasks.length === 0){
       throw new Error(

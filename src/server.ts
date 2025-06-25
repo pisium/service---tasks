@@ -2,11 +2,12 @@ import express from 'express';
 import { config } from './config'; 
 
 import { PrismaClient } from '@prisma/client';
-import { RabbitMQService } from '@/infrastructure/messaging/rabbitmq.service';
 import { PrismaTaskRepository } from '@/infrastructure/database/prisma-task.repository';
 import { UserGateway } from '@/infrastructure/gateways/user.gateway'
+import { NotificationGateway } from '@/infrastructure/gateways/notification.gateway';
 
 import { TaskEnrichmentService } from '@/application/services/task-enrichment.service';
+import { NotificationService } from '@/application/services/task-notification.service'
 import { CreateTaskUseCase } from '@/application/use-cases/create-task.usecase';
 import { UpdateTaskUseCase } from '@/application/use-cases/update-task.usecase';
 import { DeleteTaskUseCase } from '@/application/use-cases/delete-task.usecase';
@@ -22,17 +23,16 @@ async function start() {
   app.use(express.json());
 
   const prismaClient = new PrismaClient();
-  const rabbitMQService = new RabbitMQService(config.rabbitMQ.uri);
-  await rabbitMQService.start();
 
   const taskRepository = new PrismaTaskRepository(prismaClient);
   const userGateway = new UserGateway();
+  const notificationGateway : NotificationService = new NotificationGateway();
 
   const taskEnrichmentService = new TaskEnrichmentService(userGateway);
 
-  const createTaskUseCase = new CreateTaskUseCase(taskRepository, taskEnrichmentService, rabbitMQService);
-  const updateTaskUseCase = new UpdateTaskUseCase(taskRepository, taskEnrichmentService, rabbitMQService);
-  const deleteTaskUseCase = new DeleteTaskUseCase(taskRepository, rabbitMQService);
+  const createTaskUseCase = new CreateTaskUseCase(taskRepository, taskEnrichmentService, notificationGateway);
+  const updateTaskUseCase = new UpdateTaskUseCase(taskRepository, taskEnrichmentService, notificationGateway);
+  const deleteTaskUseCase = new DeleteTaskUseCase(taskRepository);
   const findTasksByGroupUseCase = new FindTasksByGroupUseCase(taskRepository, taskEnrichmentService);
   const findTasksByUserUseCase = new FindTasksByUserUseCase(taskRepository, taskEnrichmentService);
   const findTasksByDueDateUseCase = new FindTasksByDueDateUseCase(taskRepository, taskEnrichmentService);

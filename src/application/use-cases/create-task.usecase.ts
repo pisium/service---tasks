@@ -2,15 +2,14 @@ import { TaskRepository } from '@/application/repositories/task-repository';
 import { CreateTaskDTO, TaskDTO } from '@/application/DTO/task.dto';
 import { Task } from '@/domain/task.entity';
 import { v4 as uuidv4 } from 'uuid';
-import { RabbitMQService } from '@/infrastructure/messaging/rabbitmq.service';
-import { config } from '@/config';
 import { TaskEnrichmentService } from '@/application/services/task-enrichment.service';
+import { NotificationService } from '@/application/services/task-notification.service';
 
 export class CreateTaskUseCase {
   constructor(
     private readonly taskRepository: TaskRepository,
     private readonly taskEnrichmentService: TaskEnrichmentService,
-    private readonly notificationService: RabbitMQService
+    private readonly notificationService: NotificationService
   ) {}
 
   async execute(input: CreateTaskDTO): Promise<TaskDTO> {
@@ -28,23 +27,18 @@ export class CreateTaskUseCase {
 
     await this.taskRepository.create(task);
 
-    const notificationPayload = {
-      type: 'TASK_CREATED',
-      recipientId: task.creatorId,
-      data:{
-        taskId: task.id,
-        title: task.title,
-        responsible: task.responsibleId
-      }
-    };
-
-    await this.notificationService.publish(
-      config.rabbitMQ.notificationExchange,
-      config.rabbitMQ.taskCreatedRoutingKey,
-      notificationPayload
-    )
-
     const enrichedTasks = await this.taskEnrichmentService.enrichTasks([task])
+
+    await this.notificationService.send({
+      to:enrichedTasks[0].responsible.email, 
+      type: 'TASK_CREATED',
+      creator: enrichedTasks[0].creator.name,
+      data:{
+        task: enrichedTasks[0].title,
+        status: enrichedTasks[0].status,
+        responsible: enrichedTasks[0].responsible.name
+      }
+    });
 
     if (enrichedTasks.length === 0){
       throw new Error(
