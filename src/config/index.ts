@@ -8,14 +8,8 @@ export const config = {
     port: process.env.PORT || 3002,
   },
   baseUrl:{
-    url: process.env.USER_BASE_URL || 'http://service_user:3000'
-  },
-  rabbitMQ: {
-    uri: process.env.RABBITMQ_URI || 'amqp://guest:guest@localhost:5672',
-    notificationExchange: process.env.NOTIFICATION_EXCHANGE_NAME || 'notification_events',
-    taskCreatedRoutingKey: process.env.TASK_CREATED_ROUTING_KEY || 'task.created.notification',
-    taskUpdatedRoutingKey: process.env.TASK_UPDATED_ROUTING_KEY || 'task.updated.notification',
-    taskDeletedRoutingKey: process.env.TASK_DELETED_ROUTING_KEY || 'task.deleted.notification',
+    url: process.env.USER_BASE_URL || 'http://service_user:3000',
+    taskReminder: process.env.TASK_REMINDER_URL || 'http://service_notification:3001'
   },
   database: {
     database: process.env.DATABASE_URL || 'file:./dev.db'
