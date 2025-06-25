@@ -1,12 +1,13 @@
-import { PrismaClient } from "@prisma/client";
-import { Task } from "@/domain/task.entity";
-import { TaskRepository } from "@/application/repositories/task-repository";
-import { TaskMapper } from "./mappers/task-mapper";
+import { PrismaClient } from '@prisma/client';
+import { Task } from '@/domain/task.entity';
+import { TaskRepository } from '@/application/repositories/task-repository';
+import { TaskMapper } from '@/infrastructure/database/mappers/task-mapper';
 
 export class PrismaTaskRepository implements TaskRepository {
   constructor(private prisma: PrismaClient) {}
 
   async create(task: Task): Promise<void> {
+    const memberIds = task.memberIds || [];
     await this.prisma.task.create({
       data: {
         id: task.id,
@@ -19,17 +20,38 @@ export class PrismaTaskRepository implements TaskRepository {
         dueDate: task.dueDate,
         createdAt: task.createdAt,
         updatedAt: task.updatedAt,
+        members: {
+          create: memberIds.map(id => ({
+            memberId: id,
+          })),
+        }
       },
     });
   }
 
-  async update(task: Task): Promise<void> {
-    const data = TaskMapper.toPersistence(task);
+  async save(task: Task): Promise<void> {
+    const memberIds = task.memberIds || [];
+
     await this.prisma.task.update({
       where: { 
         id: task.id 
       },
-      data,
+      data:{
+        title: task.title,
+        description: task.description,
+        status: TaskMapper.statusFromPrisma(task.status),
+        responsibleId: task.responsibleId,
+        updatedAt: task.updatedAt,
+        dueDate: task.dueDate,
+        members:{
+          deleteMany: {},
+          create: memberIds.map(
+            id => ({
+              memberId:id,
+            }),
+          ),
+        },
+      }
     });
   }
 
@@ -41,30 +63,18 @@ export class PrismaTaskRepository implements TaskRepository {
 
   async findById(taskId: string): Promise<Task | null> {
     const prismaTask = await this.prisma.task.findUnique({ 
-      where: { id: taskId } 
+      where: { id: taskId } ,
+      include: {members: true},
     });
     if (!prismaTask) return null;
 
     return TaskMapper.toDomain(prismaTask);
   }
 
-  async save(task: Task): Promise<void> {
-    await this.prisma.task.update({
-      where: { id: task.id },
-      data: {
-        title: task.title,
-        description: task.description,
-        status: TaskMapper.statusToPrisma(task.status), 
-        responsibleId: task.responsibleId,
-        updatedAt: task.updatedAt,
-        dueDate: task.dueDate
-      },
-    });
-  }
-
   async findByGroupId(groupId: string): Promise<Task[]> {
     const tasks = await this.prisma.task.findMany({
       where: { groupId },
+      include: { members: true},
     });
 
     return tasks.map(TaskMapper.toDomain); 
@@ -76,8 +86,10 @@ export class PrismaTaskRepository implements TaskRepository {
         OR: [
           { creatorId: userId },
           { responsibleId: userId },
+          { members: { some: {memberId: userId}}},
         ],
       },
+      include: { members: true},
     });
 
     return tasks.map(TaskMapper.toDomain);
@@ -97,6 +109,7 @@ export class PrismaTaskRepository implements TaskRepository {
             date.getDate() + 1, 0, 0, 0),
         },
       },
+      include: { members: true},
     });
     
     return tasks.map(TaskMapper.toDomain);

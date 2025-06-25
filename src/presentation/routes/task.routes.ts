@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { TaskController } from '../controllers/task.controller';
-import { authenticateAPI } from '../middlewares/auth.middleware';
+import { TaskController } from '@/presentation/controllers/task.controller';
+import { authenticateAPI } from '@/presentation/middlewares/auth.middleware';
 
 export const createTaskRoutes = (taskController: TaskController): Router => {
   const router = Router();

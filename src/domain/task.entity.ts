@@ -12,6 +12,7 @@ export class Task {
     public dueDate?: Date,
     public description?: string,
     public responsibleId?: string,
+    public memberIds: string[] = []
   ) {}
 
   static create(
@@ -22,6 +23,7 @@ export class Task {
     description?: string,
     responsibleId?: string,
     dueDate?: Date,
+    memberIds?: string [],
   ): Task {
     if (!title.trim()) {
       throw new Error('O título da tarefa não deve estar vazio.');
@@ -39,6 +41,7 @@ export class Task {
       dueDate,
       description,
       responsibleId,
+      memberIds || []
     );
   }
 
@@ -76,5 +79,20 @@ export class Task {
   assignResponsible(responsibleId: string): void {
     this.responsibleId = responsibleId;
     this.updatedAt = new Date();
+  }
+
+  addMember(memberId: string): void{
+    if (!this.memberIds.includes(memberId)){
+      this.memberIds.push(memberId);
+      this.updatedAt = new Date();
+    }
+  }
+
+  removeMember(memberId: string): void{
+    const memberIndex = this.memberIds.indexOf(memberId);
+    if (memberIndex > -1){
+      this.memberIds.splice(memberIndex, 1);
+      this.updatedAt = new Date();
+    }
   }
 }
