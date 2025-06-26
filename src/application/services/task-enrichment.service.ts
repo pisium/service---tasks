@@ -32,7 +32,8 @@ export class TaskEnrichmentService {
         .filter(Boolean)
         .map(user => ({
           id: user!.id,
-          name: user!.name
+          name: user!.name,
+          email: user!.email
         }));
         return TaskDTOMapper.toDTO(task, creator, responsible, members);
     });

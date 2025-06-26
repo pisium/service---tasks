@@ -5,7 +5,6 @@ import { DeleteTaskUseCase } from '@/application/use-cases/delete-task.usecase';
 import { FindTasksByGroupUseCase } from '@/application/use-cases/find-task-by-group.usecase';
 import { FindTasksByUserUseCase } from '@/application/use-cases/find-task-by-user.usecase';
 import { FindTasksByDueDateUseCase } from '@/application/use-cases/find-task-by-due-date.usecase';
-import { AuthenticatedRequest } from '@/presentation/middlewares/auth.middleware';
 
 export class TaskController {
   constructor(
@@ -17,12 +16,30 @@ export class TaskController {
     private findTaskByDueDateUseCase: FindTasksByDueDateUseCase
   ) {}
 
-  async create(req: AuthenticatedRequest, res: Response): Promise<void> {
-    // AJUSTE: Adicionado bloco try...catch para consistência e segurança.
-    try {
-      const { title, description, responsibleId, groupId, dueDate, memberIds } = req.body;
-      const creatorId = req.user!.id; 
-      
+  async create(req: Request, res: Response): Promise<void> {
+    try{
+      const{
+        title,description, groupId, dueDate,
+        creator, creatorId: creatorIdField,
+        responsible, responsibleId: resposibleIdField,
+        members, memberIds: memberIdsField
+      } = req.body;
+
+      const creatorId = creatorIdField || creator?.id;
+      if (!creatorId){
+        throw new Error("é obrigatório fornecer um 'creator' (objeto com id) ou 'creatorId' (string).")
+      }
+
+      const responsibleId = resposibleIdField || responsible?.id;
+
+      let memberIds = [];
+      if (Array.isArray(memberIdsField)){
+        memberIds = memberIdsField;
+      } else if (Array.isArray(members)){
+        memberIds = members.map((member: any) => member?.id)
+                           .filter(Boolean);
+      }
+
       const task = await this.createTaskUseCase.execute({
         title,
         description,
@@ -30,37 +47,55 @@ export class TaskController {
         groupId,
         responsibleId,
         dueDate,
-        memberIds
+        memberIds,
       });
-
       res.status(201).json(task);
-
     } catch (error) {
-      if (error instanceof Error) {
-        res.status(400).json({ message: error.message });
+      if (error instanceof Error){
+        res.status(400).json({
+          message: error.message
+        });
       } else {
-        res.status(500).json({ message: "Ocorreu um erro inesperado ao criar a tarefa." });
+        res.status(500).json({
+          message: "Ocorreu um erro inesperado ao criar a tarefa."
+        });
       }
     }
   }
 
-  async update(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async update(req: Request, res: Response): Promise<void> {
     try {
       const { taskId } = req.params;
-      const userId = req.user!.id;
       const { 
-        title, 
-        description, 
+        creatorId: creatorIdField,
+        creator,
+        title,
+        description,
         status, 
-        responsibleId, 
-        dueDate, 
-        addMemberIds, 
-        removeMemberIds 
+        responsible,
+        responsibleId: resposibleIdField,
+        dueDate,
+        addMembers,
+        addMemberIds: addMemberIdsField,
+        removeMembers, 
+        removeMemberIds: removeMemberIdsField,
+        
       } = req.body;
+
+      const creatorId = creatorIdField || creator?.id
+      if (!creatorId){
+        throw new Error("É obrigatório fornecer um 'creator' (objeto com id) ou 'creatorId' (string).");
+      }
+
+      const responsibleId = resposibleIdField || responsible?.id;
+      const addMemberIds = addMemberIdsField || (Array.isArray(addMembers) ? addMembers.map(
+        member => member?.id).filter(Boolean) : []);
+      const removeMemberIds = removeMemberIdsField || (Array.isArray(removeMembers) ? removeMembers.map(
+        member => member?.id).filter(Boolean) : [])
 
       const response = await this.updateTaskUseCase.execute({
         taskId,
-        userId,
+        creatorId,
         title,
         description,
         status,
@@ -71,6 +106,7 @@ export class TaskController {
       });
 
       res.status(200).json(response);
+
     } catch (error) {
       if (error instanceof Error) {
         res.status(400).json({ message: error.message });
@@ -80,10 +116,10 @@ export class TaskController {
     }
   }
 
-  async delete(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async delete(req: Request, res: Response): Promise<void> {
     try {
       const { taskId } = req.params;
-      const userId = req.user!.id;
+      const userId = req.body;
       await this.deleteTaskUseCase.execute({ taskId, userId });
       res.status(204).send(); 
     } catch (error) {
@@ -95,7 +131,7 @@ export class TaskController {
     }
   }
 
-  async findByGroup(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async findByGroup(req: Request, res: Response): Promise<void> {
     try {
       const { groupId } = req.params;
       const tasks = await this.findTasksByGroupUseCase.execute(groupId);
@@ -109,7 +145,7 @@ export class TaskController {
     }
   }
 
-  async findByUser(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async findByUser(req: Request, res: Response): Promise<void> {
     try {
       const { userId } = req.params;
       const tasks = await this.findTasksByUserUseCase.execute(userId);

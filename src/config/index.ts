@@ -8,7 +8,7 @@ export const config = {
     port: process.env.PORT || 3002,
   },
   baseUrl:{
-    url: process.env.USER_BASE_URL || 'http://service_user:3000',
+    url: process.env.USER_BASE_URL || 'http://service_user:3001',
     taskReminder: process.env.TASK_REMINDER_URL || 'http://service_notification:3001'
   },
   database: {

@@ -18,7 +18,7 @@ export class Task {
   static create(
     id: string,
     title: string,
-    creatorId: string,
+    creator: string,
     groupId: string,
     description?: string,
     responsibleId?: string,
@@ -33,7 +33,7 @@ export class Task {
     return new Task(
       id,
       title,
-      creatorId,
+      creator,
       groupId,
       TaskStatus.TO_DO,
       now,

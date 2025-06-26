@@ -39,7 +39,7 @@ export class PrismaTaskRepository implements TaskRepository {
       data:{
         title: task.title,
         description: task.description,
-        status: TaskMapper.statusFromPrisma(task.status),
+        status: TaskMapper.statusToPrisma(task.status),
         responsibleId: task.responsibleId,
         updatedAt: task.updatedAt,
         dueDate: task.dueDate,
