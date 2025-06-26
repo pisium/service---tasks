@@ -35,5 +35,4 @@ model Task {
   updatedAt      DateTime     @updatedAt
   dueDate        DateTime?
   members        TaskMember[]
-  isNotified     Boolean      @default(false)
 }
