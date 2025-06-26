@@ -6,21 +6,22 @@ import { config } from '@/config';
 export class UserGateway implements UserRepository {
   private readonly userServiceBaseUrl: string = config.baseUrl.url;
 
-  async findManyById(id: string[]): Promise<User[]>{
-    if (id.length === 0)
+  async findManyById(ids: string[]): Promise<User[]>{
+    if (ids.length === 0)
       return [];
     try{
-      const response = await axios.get(
-        `${this.userServiceBaseUrl}/api/users/${id.join(',')}`
-      );
-      return response.data.map((
-        userData: any
-      )=> User.create(userData.id, 
-                      userData.name, 
-                      userData.email
-                    ));
+      const url = `${this.userServiceBaseUrl}/internal/users?ids=${ids.join(',')}`;
+      const response = await axios.get(url);
+
+      return response.data.map((userData: any) => {
+        return User.create({
+          id: userData.id, 
+          name: userData.name, 
+          email: userData.email
+      });
+    });
     } catch(error) {
-        console.error(`Erro ao buscar usuário ${id.join(',')}:`, error.message);
+        console.error(`Erro ao buscar usuário ${ids.join(',')}:`, error.message);
         return [];
     };
   }
