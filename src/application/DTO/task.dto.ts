@@ -21,9 +21,9 @@ export interface TaskDTO {
 export interface CreateTaskDTO{
   title: string;
   description?: string;
-  creatorId: string;
+  creator: UserInfoDTO;
   groupId: string;
-  responsibleId?: string;
+  responsible?: UserInfoDTO;
   dueDate?: Date;
-  memberIds?: string[];
+  members?: UserInfoDTO[];
 }

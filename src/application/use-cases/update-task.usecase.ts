@@ -1,13 +1,11 @@
 import { TaskRepository } from '@/application/repositories/task-repository';
 import { TaskStatus } from '@/domain/task-status.enum';
-import { config } from '@/config';
 import { TaskEnrichmentService } from '@/application/services/task-enrichment.service';
 import { TaskDTO } from '@/application/DTO/task.dto';
-import { NotificationService } from '@/application/services/task-notification.service';
 
 interface UpdateTaskRequest {
   taskId: string;
-  userId: string;
+  creatorId: string;
   title?: string;
   description?: string;
   status?: TaskStatus;
@@ -21,7 +19,6 @@ export class UpdateTaskUseCase {
   constructor(
     private taskRepository: TaskRepository,
     private taskEnrichmentService: TaskEnrichmentService,
-    private notificationService: NotificationService
   ){}
 
   async execute(data: UpdateTaskRequest): Promise<TaskDTO> {
@@ -31,8 +28,8 @@ export class UpdateTaskUseCase {
       throw new Error('Tarefa não encontrada.');
     }
 
-    const isCreator = task.creatorId === data.userId;
-    const isResponsible = task.responsibleId === data.userId;
+    const isCreator = task.creatorId === data.creatorId;
+    const isResponsible = task.responsibleId === data.responsibleId;
 
     if (!isCreator && !isResponsible) {
       throw new Error('Você não tem permissão para atualizar esta tarefa');
@@ -80,36 +77,14 @@ export class UpdateTaskUseCase {
     }
 
     if (hasChanges){
-      await this.taskRepository.save(task)
-        const notificationPayload = {
-          type: 'TASK_UPDATED',
-          recipientId: task.creatorId,
-          data:{
-            taskId: task.id,
-            title: task.title,
-            description: task.description,
-            dueDate: task.dueDate,
-            responsible: task.responsibleId
-          }
-        };
+      await this.taskRepository.save(task);
+    };
     
-    }
     const enrichedTasks = await this.taskEnrichmentService.enrichTasks([task]);
-
-    await this.notificationService.send({
-      to:enrichedTasks[0].responsible.email, 
-      type: 'TASK_UPDATED',
-      creator: enrichedTasks[0].creator.name,
-      data:{
-        task: enrichedTasks[0].title,
-        status: enrichedTasks[0].status,
-        responsible: enrichedTasks[0].responsible.name
-      }
-    });
 
     if (enrichedTasks.length === 0){
       throw new Error(
-        "Tarefa criada, mas não foi possível obter os dados do usuário."
+        "Tarefa atualizada, mas não foi possível obter os dados do usuário."
       )
     }
     return enrichedTasks[0];
