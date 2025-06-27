@@ -23,7 +23,8 @@ export class TaskMapper {
       prismaTask.dueDate,
       prismaTask.description,
       prismaTask.responsibleId,
-      memberIds
+      memberIds,
+      prismaTask.lastReminderSentAt
     );
   }
 

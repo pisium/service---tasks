@@ -8,4 +8,6 @@ export interface TaskRepository {
   findByGroupId(groupId: string): Promise<Task[]>;
   findByUserId(userId: string): Promise<Task[]>;
   findByDueTask(dueDate: Date): Promise<Task[]>;
+  findDueTasksToSendReminder(): Promise<Task[]>;
+  markReminderAsSent(taskId: string): Promise<void>;
 }

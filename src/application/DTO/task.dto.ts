@@ -11,7 +11,7 @@ export interface TaskDTO {
   status: string;
   groupId: string;
   creator: UserInfoDTO;
-  responsible: UserInfoDTO;
+  responsible?: UserInfoDTO;
   members: UserInfoDTO[];
   createdAt: Date;
   updatedAt: Date;
