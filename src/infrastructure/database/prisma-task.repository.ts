@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, TaskStatus as PrismaTaskStatus } from '@prisma/client';
 import { Task } from '@/domain/task.entity';
 import { TaskRepository } from '@/application/repositories/task-repository';
 import { TaskMapper } from '@/infrastructure/database/mappers/task-mapper';
@@ -113,5 +113,46 @@ export class PrismaTaskRepository implements TaskRepository {
     });
     
     return tasks.map(TaskMapper.toDomain);
+  }
+
+  async findDueTasksToSendReminder(): Promise<Task[]> {
+    const now = new Date();
+    const startOfDay = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(), 0, 0, 0
+    );
+    const endOfDay = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(), 23, 59, 59
+    );
+
+    const tasks = await this.prisma.task.findMany({
+      where: {
+        dueDate: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+
+        lastReminderSentAt: null,
+        status:{
+          notIn: [PrismaTaskStatus.DONE, PrismaTaskStatus.ARCHIVED]
+        }
+      },
+      include: { members: true},
+    });
+    return tasks.map(TaskMapper.toDomain)
+  }
+
+  async markReminderAsSent(taskId: string): Promise<void> {
+    await this.prisma.task.update({
+      where: {
+        id: taskId
+      },
+      data: {
+        lastReminderSentAt: new Date(),
+      },
+    });
   }
 }
