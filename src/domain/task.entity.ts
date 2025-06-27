@@ -12,7 +12,8 @@ export class Task {
     public dueDate?: Date,
     public description?: string,
     public responsibleId?: string,
-    public memberIds: string[] = []
+    public memberIds: string[] = [],
+    public lastReminderSentAt?: Date | null
   ) {}
 
   static create(
@@ -24,7 +25,7 @@ export class Task {
     responsibleId?: string,
     dueDate?: Date,
     memberIds?: string [],
-  ): Task {
+    ): Task {
     if (!title.trim()) {
       throw new Error('O título da tarefa não deve estar vazio.');
     }
@@ -41,7 +42,8 @@ export class Task {
       dueDate,
       description,
       responsibleId,
-      memberIds || []
+      memberIds || [],
+      null
     );
   }
 
