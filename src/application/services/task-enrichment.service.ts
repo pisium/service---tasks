@@ -1,34 +1,24 @@
 import { Task } from '@/domain/task.entity';
 import { TaskDTO } from '@/application/DTO/task.dto';
-import { UserRepository } from '@/application/repositories/task-user-repository';
+import { TaskUserDataService } from '@/application/services/task-user-data.service';
 import { TaskDTOMapper } from '@/application/mappers/response-dto.mapper';
 
 export class TaskEnrichmentService {
   constructor(
-    private userRepository: UserRepository
+    private taskUserDataService: TaskUserDataService
   ) {}
 
   public async enrichTasks(tasks: Task[]): Promise<TaskDTO[]>{
     if(tasks.length === 0)
       return [];
 
-    const userIds = new Set<string>();
-    tasks.forEach(task =>{
-      userIds.add(task.creatorId);
-      if(task.responsibleId)
-        userIds.add(task.responsibleId);
-      if(task.memberIds) 
-        task.memberIds.forEach(id => userIds.add(id));
-    });
-
-    const users = await this.userRepository.findManyById(Array.from(userIds));
-    const usersMap = new Map(users.map(user => [user.id, user]));
+    const membersMap = await this.taskUserDataService.getUsersMembersTasks(tasks)
 
     return tasks.map(task => {
-      const creator = usersMap.get(task.creatorId);
-      const responsible = task.responsibleId ? usersMap.get(task.responsibleId) : undefined;
+      const creator = membersMap.get(task.creatorId);
+      const responsible = task.responsibleId ? membersMap.get(task.responsibleId) : undefined;
       const members = (task.memberIds || [])
-        .map(id => usersMap.get(id))
+        .map(id => membersMap.get(id))
         .filter(Boolean)
         .map(user => ({
           id: user!.id,
