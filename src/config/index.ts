@@ -8,8 +8,8 @@ export const config = {
     port: process.env.PORT || 3002,
   },
   baseUrl:{
-    url: process.env.USER_BASE_URL || 'http://service_user:3001',
-    taskReminder: process.env.TASK_REMINDER_URL || 'http://service_notification:3001'
+    url: process.env.USER_BASE_URL || 'http://localhost:3001',
+    taskReminder: process.env.TASK_REMINDER_URL || 'https://49f0-2804-1ae0-203f-c01-f88-29a4-dd0f-b36b.ngrok-free.app'
   },
   database: {
     database: process.env.DATABASE_URL || 'file:./dev.db'
