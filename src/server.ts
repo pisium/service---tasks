@@ -6,6 +6,7 @@ import { PrismaTaskRepository } from '@/infrastructure/database/prisma-task.repo
 import { UserGateway } from '@/infrastructure/gateways/user.gateway'
 import { NotificationGateway } from '@/infrastructure/gateways/notification.gateway';
 
+import { TaskUserDataService } from '@/application/services/task-user-data.service';
 import { TaskEnrichmentService } from '@/application/services/task-enrichment.service';
 import { NotificationService } from '@/application/services/task-notification.service'
 import { CreateTaskUseCase } from '@/application/use-cases/create-task.usecase';
@@ -28,10 +29,11 @@ async function start() {
   const userGateway = new UserGateway();
   const notificationGateway : NotificationService = new NotificationGateway();
 
-  const taskEnrichmentService = new TaskEnrichmentService(userGateway);
+  const taskUserDataService = new TaskUserDataService(userGateway)
+  const taskEnrichmentService = new TaskEnrichmentService(taskUserDataService);
 
-  const createTaskUseCase = new CreateTaskUseCase(taskRepository, taskEnrichmentService, notificationGateway);
-  const updateTaskUseCase = new UpdateTaskUseCase(taskRepository, taskEnrichmentService, notificationGateway);
+  const createTaskUseCase = new CreateTaskUseCase(taskRepository, taskEnrichmentService);
+  const updateTaskUseCase = new UpdateTaskUseCase(taskRepository, taskEnrichmentService);
   const deleteTaskUseCase = new DeleteTaskUseCase(taskRepository);
   const findTasksByGroupUseCase = new FindTasksByGroupUseCase(taskRepository, taskEnrichmentService);
   const findTasksByUserUseCase = new FindTasksByUserUseCase(taskRepository, taskEnrichmentService);
@@ -55,7 +57,7 @@ async function start() {
   app.use('/api/tasks', taskRoutes);
 
   const port = config.server.port;
-  app.listen(3002, () => console.log(`Server online na porta ${port} ✅`));
+  app.listen(port, () => console.log(`Server online na porta ${port} ✅`));
 }
 
 start().catch((error) => {
