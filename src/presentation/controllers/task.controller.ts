@@ -119,8 +119,8 @@ export class TaskController {
   async delete(req: Request, res: Response): Promise<void> {
     try {
       const { taskId } = req.params;
-      const userId = req.body;
-      await this.deleteTaskUseCase.execute({ taskId, userId });
+      const { creatorId } = req.body;
+      await this.deleteTaskUseCase.execute({ taskId, creatorId });
       res.status(204).send(); 
     } catch (error) {
       if (error instanceof Error) {
