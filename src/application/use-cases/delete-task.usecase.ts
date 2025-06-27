@@ -2,7 +2,7 @@ import { TaskRepository } from "@/application/repositories/task-repository";
 
 interface DeleteTaskRequest {
   taskId: string;
-  userId: string;
+  creatorId: string;
 }
 
 export class DeleteTaskUseCase {
@@ -18,7 +18,7 @@ export class DeleteTaskUseCase {
     }
 
     // Apenas o criador pode deletar
-    if (task.creatorId !== data.userId) {
+    if (task.creatorId !== data.creatorId) {
       throw new Error('Você não tem permissão para deletar esta tarefa');
     }
 
